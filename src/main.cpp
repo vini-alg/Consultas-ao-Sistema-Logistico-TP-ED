@@ -7,13 +7,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    try {
-        Carregamento carregamento(argv[1]);
-        carregamento.executar();
-    } catch (const std::exception& e) {
-        std::cerr << "Ocorreu um erro: " << e.what() << std::endl;
-        return 1;
-    }
+    Carregamento carregamento(argv[1]);
+    carregamento.executar();
 
     return 0;
 }
