@@ -1,24 +1,29 @@
-CC = g++
-CFLAGS = -Wall -std=c++11 -g
-INC = -I./include
+# Compilador
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -Iinclude
+
+# Diretorios
 SRCDIR = src
 OBJDIR = obj
 BINDIR = bin
 
-# Lista de arquivos fonte
+# Arquivos fonte e objeto
 SOURCES = $(wildcard $(SRCDIR)/*.cpp)
-# Lista de arquivos objeto gerados a partir dos fontes
-OBJECTS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SOURCES))
-# Nome do executável
+OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+
+# Executavel
 EXECUTABLE = $(BINDIR)/tp3.out
 
-all: $(BINDIR) $(OBJDIR) $(EXECUTABLE)
+# Regra principal
+all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^
+	@mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	@mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 $(BINDIR):
 	mkdir -p $(BINDIR)
