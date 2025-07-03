@@ -10,12 +10,11 @@
 
 Carregamento::Carregamento(const std::string& filename) : filename(filename) {
     mapaPacotes = new Mapa<int, Lista<Evento*>*>();
-    mapaClientes = new Mapa<std::string, Lista<int>*>();
+    mapaClientes = new Mapa<std::string, PacotesCliente*>();
 }
 
 Carregamento::~Carregamento() {
     // 1. Libera a memória de todos os objetos Evento.
-    // A lista `eventos` é a fonte da verdade e detém a posse dos ponteiros.
     for (int i = 0; i < eventos.getTamanho(); ++i) {
         delete eventos.obter(i);
     }
@@ -26,8 +25,8 @@ Carregamento::~Carregamento() {
         delete listasDeEventos.obter(i);
     }
 
-    // 3. Libera as listas de IDs de pacotes dentro do mapa de clientes.
-    Lista<Lista<int>*> listasDePacotes = mapaClientes->obterValores();
+    // 3. Libera os objetos PacotesCliente dentro do mapa de clientes.
+    Lista<PacotesCliente*> listasDePacotes = mapaClientes->obterValores();
     for (int i = 0; i < listasDePacotes.getTamanho(); ++i) {
         delete listasDePacotes.obter(i);
     }
@@ -70,19 +69,26 @@ void Carregamento::processarLinha(const std::string& linha) {
         switch (ev->tipo) {
             case RG: {
                 ss >> ev->remetente >> ev->destinatario >> ev->armazemOrigem >> ev->armazemDestino;
-                Lista<int>* pacotesRemetente = mapaClientes->buscar(ev->remetente);
+                
+                // Processa remetente
+                PacotesCliente* pacotesRemetente = mapaClientes->buscar(ev->remetente);
                 if (pacotesRemetente == nullptr) {
-                    pacotesRemetente = new Lista<int>();
+                    pacotesRemetente = new PacotesCliente();
                     mapaClientes->inserir(ev->remetente, pacotesRemetente);
                 }
-                if (!pacotesRemetente->contem(ev->idPacote)) pacotesRemetente->adicionar(ev->idPacote);
+                if (!pacotesRemetente->enviados.contem(ev->idPacote)) {
+                    pacotesRemetente->enviados.adicionar(ev->idPacote);
+                }
 
-                Lista<int>* pacotesDestinatario = mapaClientes->buscar(ev->destinatario);
+                // Processa destinatário
+                PacotesCliente* pacotesDestinatario = mapaClientes->buscar(ev->destinatario);
                 if (pacotesDestinatario == nullptr) {
-                    pacotesDestinatario = new Lista<int>();
+                    pacotesDestinatario = new PacotesCliente();
                     mapaClientes->inserir(ev->destinatario, pacotesDestinatario);
                 }
-                if (!pacotesDestinatario->contem(ev->idPacote)) pacotesDestinatario->adicionar(ev->idPacote);
+                if (!pacotesDestinatario->aReceber.contem(ev->idPacote)) {
+                    pacotesDestinatario->aReceber.adicionar(ev->idPacote);
+                }
                 break;
             }
             case AR: ss >> ev->armazemOrigem >> ev->secaoDestino; break;
@@ -114,7 +120,7 @@ void Carregamento::processarLinha(const std::string& linha) {
 }
 
 void Carregamento::processarConsultaPacote(int tempo, int idPacote) {
-    std::cout << std::setw(7) << std::setfill('0') << tempo << " PC " << std::setw(3) << std::setfill('0') << idPacote << std::endl;
+    std::cout << std::setw(6) << std::setfill('0') << tempo << " PC " << std::setw(3) << std::setfill('0') << idPacote << std::endl;
 
     Lista<Evento*>* todosEventos = mapaPacotes->buscar(idPacote);
     if (todosEventos == nullptr) {
@@ -137,30 +143,57 @@ void Carregamento::processarConsultaPacote(int tempo, int idPacote) {
 }
 
 void Carregamento::processarConsultaCliente(int tempo, const std::string& nomeCliente) {
-    std::cout << std::setw(7) << std::setfill('0') << tempo << " CL " << nomeCliente << std::endl;
+    std::cout << std::setw(6) << std::setfill('0') << tempo << " CL " << nomeCliente << std::endl;
 
-    Lista<int>* idPacotes = mapaClientes->buscar(nomeCliente);
-    if (idPacotes == nullptr || idPacotes->getTamanho() == 0) {
+    PacotesCliente* pacotesCliente = mapaClientes->buscar(nomeCliente);
+    if (pacotesCliente == nullptr) {
         std::cout << 0 << std::endl;
         return;
     }
 
     Lista<Evento*> eventosResultantes;
-    for (int i = 0; i < idPacotes->getTamanho(); ++i) {
-        int idPacote = idPacotes->obter(i);
+    Lista<int> todosOsIds;
+    // Coleta IDs de pacotes enviados
+    for(int i = 0; i < pacotesCliente->enviados.getTamanho(); ++i) {
+        todosOsIds.adicionar(pacotesCliente->enviados.obter(i));
+    }
+    // Coleta IDs de pacotes a receber
+    for(int i = 0; i < pacotesCliente->aReceber.getTamanho(); ++i) {
+        int idPacote = pacotesCliente->aReceber.obter(i);
+        if (!todosOsIds.contem(idPacote)) { // Evita duplicatas
+            todosOsIds.adicionar(idPacote);
+        }
+    }
+
+    for (int i = 0; i < todosOsIds.getTamanho(); ++i) {
+        int idPacote = todosOsIds.obter(i);
         Lista<Evento*>* eventosPacote = mapaPacotes->buscar(idPacote);
         if (eventosPacote == nullptr) continue;
 
         Evento* ultimoEvento = nullptr;
+        Evento* eventoRegistro = nullptr;
+
         for (int j = 0; j < eventosPacote->getTamanho(); ++j) {
             Evento* ev = eventosPacote->obter(j);
             if (ev->getTempo() <= tempo) {
-                if (ultimoEvento == nullptr || ev->getTempo() > ultimoEvento->getTempo()) {
+                // Encontra o evento de registro (RG)
+                if (ev->tipo == RG) {
+                    eventoRegistro = ev;
+                }
+                // Encontra o último evento no tempo, com desempate pelo tipo de evento
+                if (ultimoEvento == nullptr || ev->getTempo() > ultimoEvento->getTempo() ||
+                   (ev->getTempo() == ultimoEvento->getTempo() && ev->tipo > ultimoEvento->tipo)) {
                     ultimoEvento = ev;
                 }
             }
         }
-        if (ultimoEvento != nullptr) {
+
+        // Adiciona o evento de registro, se encontrado e ainda não estiver na lista
+        if (eventoRegistro != nullptr && !eventosResultantes.contem(eventoRegistro)) {
+            eventosResultantes.adicionar(eventoRegistro);
+        }
+        // Adiciona o último evento, se encontrado e ainda não estiver na lista
+        if (ultimoEvento != nullptr && !eventosResultantes.contem(ultimoEvento)) {
             eventosResultantes.adicionar(ultimoEvento);
         }
     }

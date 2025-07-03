@@ -8,6 +8,17 @@
 #include "Mapa.hpp"
 
 /**
+ * @brief Estrutura para armazenar os pacotes associados a um cliente.
+ *
+ * Separa os pacotes em duas listas: os que foram enviados pelo cliente e os que
+ * ele deve receber.
+ */
+struct PacotesCliente {
+    Lista<int> enviados;
+    Lista<int> aReceber;
+};
+
+/**
  * @brief Orquestra o carregamento de dados e o processamento de simulações logísticas.
  *
  * Esta classe é responsável por ler um arquivo de entrada contendo eventos e consultas,
@@ -38,10 +49,10 @@ private:
     Lista<Evento*> eventos; ///< Fonte da verdade, armazena todos os eventos criados.
 
     // Os mapas abaixo são índices para acesso rápido aos dados.
-    // Eles armazenam ponteiros para listas, que são alocadas dinamicamente
+    // Eles armazenam ponteiros para listas/objetos, que são alocados dinamicamente
     // e devem ser liberadas manualmente no destrutor.
-    Mapa<int, Lista<Evento*>*>* mapaPacotes;     ///< Mapeia ID do pacote para sua lista de eventos.
-    Mapa<std::string, Lista<int>*>* mapaClientes; ///< Mapeia nome do cliente para sua lista de IDs de pacotes.
+    Mapa<int, Lista<Evento*>*>* mapaPacotes;         ///< Mapeia ID do pacote para sua lista de eventos.
+    Mapa<std::string, PacotesCliente*>* mapaClientes; ///< Mapeia nome do cliente para seus pacotes (enviados/a receber).
 
     /**
      * @brief Processa uma única linha do arquivo de entrada.
