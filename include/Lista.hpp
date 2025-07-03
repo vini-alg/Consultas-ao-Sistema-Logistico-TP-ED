@@ -1,17 +1,32 @@
-#ifndef LISTA_H
-#define LISTA_H
+#ifndef LISTA_HPP
+#define LISTA_HPP
 
 #include <stdexcept>
 
-// Um TAD de Lista/Vetor Dinâmico implementado do zero.
-// Usa templates para poder ser reutilizado com qualquer tipo de dado.
+/**
+ * @brief Uma implementação de um vetor dinâmico (lista) genérico.
+ * 
+ * Esta classe fornece uma estrutura de dados de lista que pode crescer dinamicamente.
+ * É implementada usando templates para permitir o armazenamento de qualquer tipo de dado.
+ * A classe gerencia a memória internamente e se redimensiona conforme necessário.
+ * Segue a "Regra dos Três" para garantir o gerenciamento correto da memória (destrutor,
+ * construtor de cópia e operador de atribuição de cópia).
+ *
+ * @tparam T O tipo de elemento a ser armazenado na lista.
+ */
 template <typename T>
 class Lista {
 private:
-    T* elementos;
-    int capacidade;
-    int quantidade;
+    T* elementos;       ///< Ponteiro para o array alocado dinamicamente.
+    int capacidade;     ///< A capacidade atual do array.
+    int quantidade;     ///< O número de elementos atualmente na lista.
 
+    /**
+     * @brief Redimensiona o array interno para acomodar mais elementos.
+     * 
+     * Dobra a capacidade atual do array. Se a capacidade for 0, define como 1.
+     * Aloca um novo array, copia os elementos existentes e libera o antigo.
+     */
     void redimensionar() {
         int novaCapacidade = (capacidade == 0) ? 1 : capacidade * 2;
         T* novosElementos = new T[novaCapacidade];
@@ -24,13 +39,32 @@ private:
     }
 
 public:
-    Lista() {
-        capacidade = 10;
-        quantidade = 0;
+    /**
+     * @brief Construtor padrão.
+     * 
+     * Inicializa uma lista vazia com uma capacidade inicial padrão.
+     */
+    Lista() : capacidade(10), quantidade(0) {
         elementos = new T[capacidade];
     }
 
-    // Construtor de cópia (Deep Copy)
+    /**
+     * @brief Destrutor.
+     * 
+     * Libera a memória alocada para os elementos da lista.
+     */
+    ~Lista() {
+        delete[] elementos;
+    }
+
+    /**
+     * @brief Construtor de cópia (Deep Copy).
+     * 
+     * Cria uma nova lista que é uma cópia profunda de outra lista.
+     * Garante que os dados sejam duplicados, não apenas os ponteiros.
+     * 
+     * @param outra A lista a ser copiada.
+     */
     Lista(const Lista<T>& outra) {
         capacidade = outra.capacidade;
         quantidade = outra.quantidade;
@@ -40,13 +74,21 @@ public:
         }
     }
 
-    // Operador de atribuição de cópia (Deep Copy)
+    /**
+     * @brief Operador de atribuição de cópia (Deep Copy).
+     * 
+     * Atribui o conteúdo de outra lista a esta, realizando uma cópia profunda.
+     * Inclui proteção contra auto-atribuição.
+     * 
+     * @param outra A lista da qual os dados serão copiados.
+     * @return Uma referência para a lista atual (`*this`).
+     */
     Lista<T>& operator=(const Lista<T>& outra) {
-        if (this == &outra) { // Proteção contra auto-atribuição
+        if (this == &outra) {
             return *this;
         }
 
-        delete[] elementos; // Libera a memória antiga
+        delete[] elementos;
 
         capacidade = outra.capacidade;
         quantidade = outra.quantidade;
@@ -58,10 +100,13 @@ public:
         return *this;
     }
 
-    ~Lista() {
-        delete[] elementos;
-    }
-
+    /**
+     * @brief Adiciona um elemento ao final da lista.
+     * 
+     * Se a lista estiver cheia, ela será redimensionada antes de adicionar o novo elemento.
+     * 
+     * @param elemento O elemento a ser adicionado.
+     */
     void adicionar(T elemento) {
         if (quantidade == capacidade) {
             redimensionar();
@@ -69,18 +114,50 @@ public:
         elementos[quantidade++] = elemento;
     }
 
+    /**
+     * @brief Obtém uma referência ao elemento em um índice específico.
+     * 
+     * @param indice O índice do elemento a ser obtido.
+     * @return Uma referência ao elemento no índice especificado.
+     * @throws std::out_of_range se o índice for inválido.
+     */
     T& obter(int indice) {
         if (indice < 0 || indice >= quantidade) {
             throw std::out_of_range("Índice fora dos limites da lista.");
         }
         return elementos[indice];
     }
+    
+    /**
+     * @brief Define o valor de um elemento em um índice específico.
+     *
+     * @param indice O índice do elemento a ser modificado.
+     * @param valor O novo valor para o elemento.
+     * @throws std::out_of_range se o índice for inválido.
+     */
+    void definir(int indice, T valor) {
+        if (indice < 0 || indice >= quantidade) {
+            throw std::out_of_range("Índice fora dos limites da lista.");
+        }
+        elementos[indice] = valor;
+    }
 
-    int tamanho() {
+    /**
+     * @brief Retorna o número de elementos na lista.
+     * 
+     * @return O tamanho atual da lista.
+     */
+    int getTamanho() const {
         return quantidade;
     }
 
-    bool contem(T elemento) {
+    /**
+     * @brief Verifica se a lista contém um determinado elemento.
+     * 
+     * @param elemento O elemento a ser procurado.
+     * @return `true` se o elemento for encontrado, `false` caso contrário.
+     */
+    bool contem(T elemento) const {
         for (int i = 0; i < quantidade; ++i) {
             if (elementos[i] == elemento) {
                 return true;
@@ -89,7 +166,12 @@ public:
         return false;
     }
 
-    // Método para ordenar a lista usando insertion sort e uma função de comparação
+    /**
+     * @brief Ordena a lista usando o algoritmo Insertion Sort.
+     * 
+     * @param comparar Um ponteiro de função que recebe dois elementos e retorna `true`
+     *                 se o primeiro deve vir antes do segundo.
+     */
     void ordenar(bool (*comparar)(T a, T b)) {
         for (int i = 1; i < quantidade; i++) {
             T chave = elementos[i];
@@ -103,4 +185,4 @@ public:
     }
 };
 
-#endif // LISTA_H
+#endif // LISTA_HPP

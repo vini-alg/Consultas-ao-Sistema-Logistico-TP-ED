@@ -1,14 +1,33 @@
 #include <iostream>
 #include "../include/Carregamento.hpp"
 
+/**
+ * @file main.cpp
+ * @brief Ponto de entrada principal para o sistema de simulação logística.
+ *
+ * Este programa lê um arquivo de entrada especificado via linha de comando,
+ * processa os eventos e consultas de um sistema logístico e imprime os
+ * resultados na saída padrão.
+ */
+
+/**
+ * @brief Função principal que inicia a execução do programa.
+ * 
+ * @param argc O número de argumentos da linha de comando.
+ * @param argv Um array de strings contendo os argumentos. Espera-se o nome do
+ *             programa e o caminho para o arquivo de entrada.
+ * @return 0 em caso de sucesso, 1 em caso de erro (e.g., uso incorreto).
+ */
 int main(int argc, char* argv[]) {
+    // Verifica se o número de argumentos está correto
     if (argc != 2) {
         std::cerr << "Uso: " << argv[0] << " <arquivo_de_entrada>" << std::endl;
-        return 1;
+        return 1; // Retorna código de erro
     }
 
+    // Cria um objeto Carregamento e inicia a execução com o arquivo fornecido
     Carregamento carregamento(argv[1]);
     carregamento.executar();
 
-    return 0;
+    return 0; // Retorna sucesso
 }

@@ -1,9 +1,14 @@
-#ifndef MAPA_H
-#define MAPA_H
+#ifndef MAPA_HPP
+#define MAPA_HPP
 
 #include <string>
+#include "Lista.hpp"
 
-// Estrutura do Nó da Árvore de Busca Binária
+/**
+ * @brief Estrutura de um nó para a Árvore de Busca Binária.
+ * @tparam Chave O tipo da chave.
+ * @tparam Valor O tipo do valor.
+ */
 template <typename Chave, typename Valor>
 struct No {
     Chave chave;
@@ -13,82 +18,88 @@ struct No {
     No(Chave c, Valor v) : chave(c), valor(v), esquerda(nullptr), direita(nullptr) {}
 };
 
-// Template da classe Mapa (implementada como uma Árvore de Busca Binária)
+/**
+ * @brief Implementação de um Mapa usando uma Árvore de Busca Binária (BST).
+ * 
+ * Esta classe mapeia chaves a valores. A implementação usa uma BST não balanceada,
+ * o que resulta em um desempenho de O(log n) em média, mas O(n) no pior caso.
+ * 
+ * @tparam Chave O tipo da chave, que deve suportar operadores de comparação.
+ * @tparam Valor O tipo do valor associado à chave.
+ */
 template <typename Chave, typename Valor>
 class Mapa {
 private:
     No<Chave, Valor>* raiz;
 
-    // Função auxiliar recursiva para inserir
-    No<Chave, Valor>* inserir(No<Chave, Valor>* no, Chave chave, Valor valor) {
-        if (no == nullptr) {
-            return new No<Chave, Valor>(chave, valor);
-        }
-
-        if (chave < no->chave) {
-            no->esquerda = inserir(no->esquerda, chave, valor);
-        } else if (chave > no->chave) {
-            no->direita = inserir(no->direita, chave, valor);
-        } else {
-            // Chave já existe, atualiza o valor
-            no->valor = valor;
-        }
+    No<Chave, Valor>* inserirRecursivo(No<Chave, Valor>* no, Chave chave, Valor valor) {
+        if (no == nullptr) return new No<Chave, Valor>(chave, valor);
+        if (chave < no->chave) no->esquerda = inserirRecursivo(no->esquerda, chave, valor);
+        else if (chave > no->chave) no->direita = inserirRecursivo(no->direita, chave, valor);
+        else no->valor = valor; // Chave já existe, atualiza o valor
         return no;
     }
 
-    // Função auxiliar recursiva para buscar
-    Valor buscar(No<Chave, Valor>* no, Chave chave) {
-        if (no == nullptr) {
-            return Valor(); // Retorna valor padrão se não encontrado
-        }
-
-        if (chave == no->chave) {
-            return no->valor;
-        } else if (chave < no->chave) {
-            return buscar(no->esquerda, chave);
-        } else {
-            return buscar(no->direita, chave);
-        }
+    Valor buscarRecursivo(No<Chave, Valor>* no, Chave chave) const {
+        if (no == nullptr) return Valor(); // Retorna valor padrão (nullptr para ponteiros)
+        if (chave == no->chave) return no->valor;
+        if (chave < no->chave) return buscarRecursivo(no->esquerda, chave);
+        return buscarRecursivo(no->direita, chave);
     }
 
-    // Função auxiliar para destruir a árvore
-    void destruir(No<Chave, Valor>* no) {
+    void destruirRecursivo(No<Chave, Valor>* no) {
         if (no != nullptr) {
-            destruir(no->esquerda);
-            destruir(no->direita);
+            destruirRecursivo(no->esquerda);
+            destruirRecursivo(no->direita);
             delete no;
         }
     }
 
-    // Função auxiliar para coletar todos os valores em uma lista
-    void coletarValores(No<Chave, Valor>* no, Lista<Valor>& lista) {
+    void coletarValoresRecursivo(No<Chave, Valor>* no, Lista<Valor>& lista) const {
         if (no != nullptr) {
-            coletarValores(no->esquerda, lista);
+            coletarValoresRecursivo(no->esquerda, lista);
             lista.adicionar(no->valor);
-            coletarValores(no->direita, lista);
+            coletarValoresRecursivo(no->direita, lista);
         }
     }
 
 public:
+    /** @brief Construtor padrão. Cria um mapa vazio. */
     Mapa() : raiz(nullptr) {}
 
-    ~Mapa() {
-        destruir(raiz);
-    }
+    /** @brief Destrutor. Libera todos os nós da árvore. */
+    ~Mapa() { destruirRecursivo(raiz); }
 
+    /**
+     * @brief Insere um par chave-valor no mapa.
+     * Se a chave já existir, o valor associado é atualizado.
+     * @param chave A chave para inserir.
+     * @param valor O valor associado à chave.
+     */
     void inserir(Chave chave, Valor valor) {
-        raiz = inserir(raiz, chave, valor);
+        raiz = inserirRecursivo(raiz, chave, valor);
     }
 
-    Valor buscar(Chave chave) {
-        return buscar(raiz, chave);
+    /**
+     * @brief Busca um valor associado a uma chave.
+     * @param chave A chave a ser buscada.
+     * @return O valor associado à chave. Se a chave não for encontrada, retorna
+     *         um valor padrão para o tipo `Valor` (e.g., `nullptr` para ponteiros).
+     */
+    Valor buscar(Chave chave) const {
+        return buscarRecursivo(raiz, chave);
     }
 
-    Lista<Valor> obterValores() {
+    /**
+     * @brief Retorna uma lista com todos os valores contidos no mapa.
+     * Os valores são retornados em ordem (in-order traversal da BST).
+     * @return Uma `Lista<Valor>` com todos os valores.
+     */
+    Lista<Valor> obterValores() const {
         Lista<Valor> listaDeValores;
-        coletarValores(raiz, listaDeValores);
+        coletarValoresRecursivo(raiz, listaDeValores);
         return listaDeValores;
     }
 };
 
-#endif // MAPA_H
+#endif // MAPA_HPP
