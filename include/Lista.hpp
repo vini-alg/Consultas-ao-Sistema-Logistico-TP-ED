@@ -115,6 +115,30 @@ public:
     }
 
     /**
+     * @brief Redimensiona a lista para conter um novo número de elementos.
+     * 
+     * @param novoTamanho O novo tamanho da lista.
+     */
+    void resize(int novoTamanho) {
+        if (novoTamanho < 0) return;
+        if (novoTamanho > capacidade) {
+            int novaCapacidade = novoTamanho;
+            T* novosElementos = new T[novaCapacidade];
+            for (int i = 0; i < quantidade; ++i) {
+                novosElementos[i] = elementos[i];
+            }
+            delete[] elementos;
+            elementos = novosElementos;
+            capacidade = novaCapacidade;
+        }
+
+        for (int i = quantidade; i < novoTamanho; ++i) {
+            elementos[i] = T();
+        }
+        quantidade = novoTamanho;
+    }
+
+    /**
      * @brief Obtém uma referência ao elemento em um índice específico.
      * 
      * @param indice O índice do elemento a ser obtido.
@@ -127,6 +151,48 @@ public:
         }
         return elementos[indice];
     }
+
+    /**
+     * @brief Obtém uma referência constante ao elemento em um índice específico.
+     * 
+     * @param indice O índice do elemento a ser obtido.
+     * @return Uma referência constante ao elemento no índice especificado.
+     * @throws std::out_of_range se o índice for inválido.
+     */
+    const T& obter(int indice) const {
+        if (indice < 0 || indice >= quantidade) {
+            throw std::out_of_range("Índice fora dos limites da lista.");
+        }
+        return elementos[indice];
+    }
+
+    /**
+     * @brief Acessa um elemento pelo índice usando o operador [].
+     * @param indice O índice do elemento.
+     * @return Uma referência ao elemento.
+     * @throws std::out_of_range se o índice for inválido.
+     */
+    T& operator[](int indice) {
+        if (indice < 0 || indice >= quantidade) {
+            throw std::out_of_range("Índice fora dos limites da lista.");
+        }
+        return elementos[indice];
+    }
+
+    /**
+     * @brief Acessa um elemento constante pelo índice usando o operador [].
+     * @param indice O índice do elemento.
+     * @return Uma referência constante ao elemento.
+     * @throws std::out_of_range se o índice for inválido.
+     */
+    const T& operator[](int indice) const {
+        if (indice < 0 || indice >= quantidade) {
+            throw std::out_of_range("Índice fora dos limites da lista.");
+        }
+        return elementos[indice];
+    }
+
+
     
     /**
      * @brief Define o valor de um elemento em um índice específico.

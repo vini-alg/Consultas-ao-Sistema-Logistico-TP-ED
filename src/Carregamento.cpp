@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip> // Para std::setw e std::setfill
+#include <chrono>  // Para medição de tempo
 
 /**
  * @file Carregamento.cpp
@@ -224,6 +225,37 @@ static bool compararEventos(Evento* a, Evento* b) {
     return a->idPacote < b->idPacote;
 }
 
-void Carregamento::ordenarEventos(Lista<Evento*>& eventos) {
-    eventos.ordenar(compararEventos);
+void Carregamento::ordenarEventos(Lista<Evento*>& lista) {
+    lista.ordenar(compararEventos);
+}
+
+void Carregamento::executarComTiming() {
+    // 1. Ler todas as linhas para a memória primeiro
+    std::ifstream inputFile(this->filename);
+    if (!inputFile.is_open()) {
+        std::cerr << "Erro ao abrir o arquivo: " << this->filename << std::endl;
+        return;
+    }
+
+    Lista<std::string> linhas;
+    std::string linha;
+    while (std::getline(inputFile, linha)) {
+        if (!linha.empty()) {
+            linhas.adicionar(linha);
+        }
+    }
+    inputFile.close();
+
+    // 2. Medir o tempo de processamento
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < linhas.getTamanho(); ++i) {
+        processarLinha(linhas.obter(i));
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = end - start;
+
+    // Imprime o tempo de processamento em stderr para não interferir com a saída padrão
+    std::cerr << "Processing time: " << duration.count() << " ms" << std::endl;
 }

@@ -18,16 +18,24 @@
  *             programa e o caminho para o arquivo de entrada.
  * @return 0 em caso de sucesso, 1 em caso de erro (e.g., uso incorreto).
  */
+#include <string>
+
 int main(int argc, char* argv[]) {
     // Verifica se o número de argumentos está correto
-    if (argc != 2) {
-        std::cerr << "Uso: " << argv[0] << " <arquivo_de_entrada>" << std::endl;
+    if (argc < 2 || argc > 3) {
+        std::cerr << "Uso: " << argv[0] << " <arquivo_de_entrada> [--timed]" << std::endl;
         return 1; // Retorna código de erro
     }
 
-    // Cria um objeto Carregamento e inicia a execução com o arquivo fornecido
+    // Cria um objeto Carregamento com o arquivo fornecido
     Carregamento carregamento(argv[1]);
-    carregamento.executar();
+
+    // Verifica se o modo de medição de tempo foi solicitado
+    if (argc == 3 && std::string(argv[2]) == "--timed") {
+        carregamento.executarComTiming();
+    } else {
+        carregamento.executar();
+    }
 
     return 0; // Retorna sucesso
 }

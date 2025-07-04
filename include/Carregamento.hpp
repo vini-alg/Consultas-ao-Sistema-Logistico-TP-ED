@@ -44,6 +44,14 @@ public:
      */
     void executar();
 
+    /**
+     * @brief Executa a simulação com medição de tempo, separando I/O de processamento.
+     *
+     * Primeiro, todas as linhas são lidas para a memória. Em seguida, o tempo de
+     * processamento dessas linhas é medido e impresso em stderr.
+     */
+    void executarComTiming();
+
 private:
     std::string filename;
     Lista<Evento*> eventos; ///< Fonte da verdade, armazena todos os eventos criados.
