@@ -44,14 +44,20 @@ void Carregamento::executar() {
         return;
     }
 
+    // Carrega todas as linhas para a memória primeiro
+    Lista<std::string> linhas;
     std::string linha;
     while (std::getline(inputFile, linha)) {
         if (!linha.empty()) {
-            processarLinha(linha);
+            linhas.adicionar(linha);
         }
     }
-
     inputFile.close();
+
+    // Agora, processa as linhas a partir da memória
+    for (int i = 0; i < linhas.getTamanho(); ++i) {
+        processarLinha(linhas.obter(i));
+    }
 }
 
 void Carregamento::processarLinha(const std::string& linha) {
