@@ -38,19 +38,19 @@ void Union(subset subsets[], int xroot, int yroot){
 int rndnode(int nodes){ return (int)(drand48()*nodes); }  
 
 int main(){
-  int seed = 1;
+  int seed = 42;
   int transportcapacity = 2;
   int transportcost = 20;
   int transportinterval = 100;
   int retrievecost = 1;
   int nodes = 10;
-  int numpackets = 100;
+  int numpackets = 1000;
   int conncomp = nodes;
   long atime=1;
   long rtime=10;
-  int numclients = 10;
-  int numcl = 10;
-  int numpc = 10;
+  int numclients = 500;
+  int numcl = 1000;
+  int numpc = 1000;
   int src, dst, fsrc, fdst, sender, receiver;
   long qtime;
   FILE * out = stdout;
